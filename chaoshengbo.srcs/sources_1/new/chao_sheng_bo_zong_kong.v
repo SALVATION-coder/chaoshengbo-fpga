@@ -57,11 +57,10 @@ assign audio_mod = (adc_audio_data > 8'd84) ? 1'b1 : 1'b0;
 wire mod_signal;
 assign mod_signal = mod_mode ? audio_mod : tiao_zhi_1k;
 
-// ===================== 临时AM调幅（仅供示波器验证包络） =====================
-// 验证完成后请改回DSB调制（取消注释下面两行，注释掉AM这行）
+// ===================== DSB幅度调制 =====================
 // DSB调制：载波与调制信号异或（当调制信号为0时反相载波）
 wire tiao_zhi_shu_chu;
-assign tiao_zhi_shu_chu = zai_bo_40k & (~mod_signal);  // AM验证：调制波=1时静音，=0时输出载波
+assign tiao_zhi_shu_chu = zai_bo_40k ^ (~mod_signal);
 
 // ===================== 595数据组装 =====================
 // 32位595数据：按原理图U1→U2→U3→U4级联
