@@ -131,6 +131,7 @@ always @(posedge sys_clk or negedge sys_rst_n) begin
 end
 
 // ===================== 片选与时钟使能控制 =====================
+// ★★★ 关键修复：READ状态需要保持CS拉低和SCLK使能 ★★★
 always @(posedge sys_clk or negedge sys_rst_n) begin
     if(!sys_rst_n) begin
         adc_cs_n <= 1'b1;
@@ -140,21 +141,26 @@ always @(posedge sys_clk or negedge sys_rst_n) begin
     else begin
         case(curr_state)
             CS_LOW: begin
-                adc_cs_n <= 1'b0;
-                sclk_en <= 1'b1;
+                adc_cs_n <= 1'b0;   // 拉低CS
+                sclk_en <= 1'b1;    // 开始产生SCLK
+                wait_cnt <= 6'd0;
+            end
+            READ: begin
+                adc_cs_n <= 1'b0;   // 保持CS低 ★修复点
+                sclk_en <= 1'b1;    // 保持SCLK使能 ★修复点
                 wait_cnt <= 6'd0;
             end
             CS_HIGH: begin
-                adc_cs_n <= 1'b1;
-                sclk_en <= 1'b0;
+                adc_cs_n <= 1'b1;   // 拉高CS
+                sclk_en <= 1'b0;    // 停止SCLK
                 wait_cnt <= 6'd0;
             end
             WAIT_CS: begin
-                adc_cs_n <= 1'b1;
-                sclk_en <= 1'b0;
+                adc_cs_n <= 1'b1;   // 保持CS高（恢复时间）
+                sclk_en <= 1'b0;    // 保持SCLK停止
                 wait_cnt <= wait_cnt + 6'd1;
             end
-            default: begin
+            default: begin          // IDLE, DATA_PROC
                 adc_cs_n <= 1'b1;
                 sclk_en <= 1'b0;
                 wait_cnt <= 6'd0;
