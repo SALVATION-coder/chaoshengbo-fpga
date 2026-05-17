@@ -49,11 +49,12 @@ adc_xcs7478_driver u_adc_xcs7478_driver(
 );
 
 // ADC音频转1bit调制信号（过零比较）
-// 注意：硬件VIN偏置为1.65V（3.3V分压），对应ADC值约84
 wire audio_mod;
 assign audio_mod = (adc_audio_data > 8'd84) ? 1'b1 : 1'b0;
 
 // ===================== 调制源选择 =====================
+// mod_mode=0: DSB调制（1kHz固定调制）
+// mod_mode=1: DSB调制（ADC音频调制，不含1kHz）
 wire mod_signal;
 assign mod_signal = mod_mode ? audio_mod : tiao_zhi_1k;
 
