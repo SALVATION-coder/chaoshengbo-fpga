@@ -48,9 +48,18 @@ adc_xcs7478_driver u_adc_xcs7478_driver(
     .audio_out      (adc_audio_data)
 );
 
-// ADC音频转1bit调制信号（过零比较）
-wire audio_mod;
-assign audio_mod = (adc_audio_data > 8'd84) ? 1'b1 : 1'b0;
+// ADC音频转1bit调制信号（过零比较+静音门限）
+// 当ADC值在偏置84附近（78~90）时判定为无信号，保持上次值消除刺耳噪声
+reg audio_mod;
+always @(posedge clk or negedge rst_n) begin
+    if(!rst_n)
+        audio_mod <= 1'b0;
+    else if(adc_audio_data > 8'd90)
+        audio_mod <= 1'b1;
+    else if(adc_audio_data < 8'd78)
+        audio_mod <= 1'b0;
+    // else: 保持当前值（无信号输入时消除噪声）
+end
 
 // ===================== 调制源选择 =====================
 // mod_mode=0: DSB调制（1kHz固定调制）
